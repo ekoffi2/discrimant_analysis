@@ -1,0 +1,126 @@
+---
+title: "hw2 data mining "
+author: "Esther Koffi"
+date: "February 15, 2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+
+```{r}
+
+Bo <- -6
+B1 <- 0.05
+B2 <- 1
+hours_studied <- 40
+undergrad_GPA <- 3.5
+```
+
+
+### (a)
+
+```{r}
+# Estimate the probability of getting an A
+pb <- Bo + B1 * hours_studied + B2 * undergrad_GPA
+probability <- 1 / (1 + exp(-pb))
+
+cat("Probability of getting an A:", probability, "\n")
+```
+
+
+
+### (b) 
+
+
+```{r}
+hours_needed <- (-Bo - B2 * undergrad_GPA + log(0.5 / (1 - 0.5))) / B1
+
+cat("Hours needed for a 50% chance of getting an A:", hours_needed, "\n")
+```
+
+
+## Question 2
+
+This question uses the iris data set which contains information related to flower measurements for three different species of iris. You do not need to create training and test sets for this problem.
+
+```{r}
+# Load the iris dataset
+data(iris)
+```
+
+
+### (a) Create a new data frame called iris2 by removing all of the setosa species flower from the original data set.
+
+```{r}
+iris2 <- subset(iris, Species != "setosa")
+iris2$Species <- droplevels(iris2$Species)
+```
+
+### (b) Fit a logistic regression model on the data to predict species using the other variables.
+
+```{r}
+log_model <- glm(Species ~ ., data = iris2, family = "binomial")
+
+summary(log_model)
+```
+
+
+### (c) Repeat part (b) using LDA.
+
+```{r message=FALSE, warning=FALSE}
+library(MASS)
+#fitting Linear Discriminant Analysis model
+lda_model <- lda(Species ~ ., data = iris2)
+lda_model
+
+```
+### (d) Repeat part (b) using QDA.
+
+```{r}
+iris2$Species <- factor(iris2$Species,levels = c("versicolor",  "virginica"))
+
+#Fitting Quadratic Discriminant Analysis model
+qda_model <- qda(Species ~ ., data = iris2)
+qda_model
+```
+
+### (e) Repeat part (b) using naive Bayes.
+
+```{r}
+library(e1071)
+
+nb_model <- naiveBayes(Species ~ ., data = iris2)
+nb_model
+```
+
+### (f) Which model performed best?
+
+
+```{r}
+# Make predictions
+nb_pred <- predict(nb_model, iris2)
+lda_pred <- predict(lda_model, iris2)
+qda_pred <- predict(qda_model, iris2)
+log_pred <- predict(log_model, iris2, type = "response")
+
+# Convert predicted probabilities to classes for logistic regression
+log_pred_class <- ifelse(log_pred > 0.5, "virginica", "versicolor")
+
+# Create confusion matrices
+library(caret)
+confusion_nb <- confusionMatrix(table(nb_pred, iris2$Species))
+confusion_qda <- confusionMatrix(table(qda_pred$class, iris2$Species))
+confusion_log <- confusionMatrix(table(log_pred_class, iris2$Species))
+
+confusion_nb
+confusion_qda
+confusion_log
+```
+
+
+ from the confusion matrix the most accurate model is logistics regression with 98% accuracy which performed best. QDA and LDA models has 97% accuracy while naive bayes model has 94% accuracy.
